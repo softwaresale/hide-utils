@@ -2,6 +2,11 @@
 name = "hider"
 version = "1.0.0"
 edition = "2021"
+description = "A super simple CLI tool for (un)hiding files"
+license = "GPLv3"
+license-file = "LICENSE"
+homepage = "https://github.com/softwaresale/hider"
+repository = "https://github.com/softwaresale/hider"
 
 [dependencies]
 clap = { version = "4.5.7", features = ["env", "wrap_help", "derive"] }
