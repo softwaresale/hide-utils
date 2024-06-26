@@ -60,7 +60,7 @@ pub fn unhide_file(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
 mod tests {
     use std::path::PathBuf;
     use crate::err::AppError;
-    use crate::renaming::{file_is_hidden, hide_file, path_filename, unhide_file};
+    use hide_utils_core::renaming::{file_is_hidden, hide_file, path_filename, unhide_file};
 
     #[test]
     fn hide_file_adds_hide_char_without_parent() {

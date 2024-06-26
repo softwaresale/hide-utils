@@ -9,6 +9,9 @@ homepage = "https://github.com/softwaresale/hider"
 repository = "https://github.com/softwaresale/hider"
 
 [dependencies]
+
+hide-utils-core = { path = "../hide-utils-core" }
+
 clap = { version = "4.5.7", features = ["env", "wrap_help", "derive"] }
 anyhow = "1.0.86"
 log = "0.4.21"

@@ -1,3 +1,3 @@
 
 [workspace]
-members = ["hider"]
+members = [ "hide-utils-core","hider"]
