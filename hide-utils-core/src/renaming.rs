@@ -29,8 +29,22 @@ pub fn path_filename(path: &Path) -> Result<&str, AppError> {
     Ok(str_rep)
 }
 
-/// take an unhidden file and hide it
+/// Take an un-hidden path and hide it at the file system level. If the path is already hidden,
+/// then do nothing
 pub fn hide_file(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
+    if file_is_hidden(path, hide_char)? {
+        return Ok(path.to_path_buf());
+    }
+    
+    let dest_path = hide_file_path(path, hide_char)?;
+    std::fs::rename(path, &dest_path)
+        .map_err(|err| AppError::IOError { error: err, context: "rename".to_string() })?;
+    
+    Ok(dest_path)
+}
+
+/// take an unhidden file and create a hidden path version
+pub fn hide_file_path(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
     let parent_path = path.parent();
     let filename = path_filename(path)?;
     let hidden_filename = format!("{}{}", hide_char, filename);
@@ -41,8 +55,22 @@ pub fn hide_file(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
     }
 }
 
-/// take a hidden file and make it unhidden
+/// Take a hidden path and un-hides it at the file system level. If the path is already un-hidden,
+/// then do nothing
 pub fn unhide_file(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
+    if !file_is_hidden(path, hide_char)? {
+        return Ok(path.to_path_buf());
+    }
+
+    let dest_path = unhide_file_path(path, hide_char)?;
+    std::fs::rename(path, &dest_path)
+        .map_err(|err| AppError::IOError { error: err, context: "rename".to_string() })?;
+
+    Ok(dest_path)
+}
+
+/// take a hidden file and make it unhidden
+pub fn unhide_file_path(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
     let parent_path = path.parent();
     let filename = path_filename(path)?;
     let Some(unhidden_filename) = filename.strip_prefix(&hide_char.to_string()) else {
@@ -56,17 +84,29 @@ pub fn unhide_file(path: &Path, hide_char: char) -> Result<PathBuf, AppError> {
     }
 }
 
+/// given a file path, hide it if it's un-hidden, or un-hide it if it's hidden 
+pub fn auto_transition_file(general_path: &Path, hide_char: char) -> Result<(), AppError> {
+    let destination_path = if file_is_hidden(general_path, hide_char)? {
+        unhide_file_path(general_path, hide_char)
+    } else {
+        hide_file_path(general_path, hide_char)
+    }?;
+
+    std::fs::rename(general_path, destination_path)
+        .map_err(|err| AppError::IOError { error: err, context: "rename".to_string() })
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
     use crate::err::AppError;
-    use hide_utils_core::renaming::{file_is_hidden, hide_file, path_filename, unhide_file};
+    use crate::renaming::{file_is_hidden, hide_file_path, path_filename, unhide_file_path};
 
     #[test]
     fn hide_file_adds_hide_char_without_parent() {
         let path = PathBuf::from("file.txt");
         let expected_path = PathBuf::from(".file.txt");
-        let actual_path = hide_file(&path, '.').expect("Hide should succeed");
+        let actual_path = hide_file_path(&path, '.').expect("Hide should succeed");
         assert_eq!(expected_path, actual_path);
     }
 
@@ -74,7 +114,7 @@ mod tests {
     fn unhide_file_removes_hide_char_without_parent() {
         let path = PathBuf::from(".file.txt");
         let expected_path = PathBuf::from("file.txt");
-        let actual_path = unhide_file(&path, '.').expect("Unhide should succeed");
+        let actual_path = unhide_file_path(&path, '.').expect("Unhide should succeed");
         assert_eq!(expected_path, actual_path);
     }
 
@@ -82,7 +122,7 @@ mod tests {
     fn hide_file_adds_hide_char_with_parent() {
         let path = PathBuf::from("/some/path/to/file.txt");
         let expected_path = PathBuf::from("/some/path/to/.file.txt");
-        let actual_path = hide_file(&path, '.').expect("Hide should succeed");
+        let actual_path = hide_file_path(&path, '.').expect("Hide should succeed");
         assert_eq!(expected_path, actual_path);
     }
 
@@ -90,7 +130,7 @@ mod tests {
     fn unhide_file_removes_hide_char_with_parent() {
         let path = PathBuf::from("/some/path/to/.file.txt");
         let expected_path = PathBuf::from("/some/path/to/file.txt");
-        let actual_path = unhide_file(&path, '.').expect("Unhide should succeed");
+        let actual_path = unhide_file_path(&path, '.').expect("Unhide should succeed");
         assert_eq!(expected_path, actual_path);
     }
 

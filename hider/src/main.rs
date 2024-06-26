@@ -5,7 +5,7 @@ use clap::Parser;
 use log::{info, LevelFilter};
 use promptly::prompt_default;
 use hide_utils_core::err::AppError;
-use hide_utils_core::renaming::{file_is_hidden, hide_file, unhide_file};
+use hide_utils_core::renaming::{file_is_hidden, hide_file_path, unhide_file_path};
 use hide_utils_core::search::find_intended_file;
 use crate::args::HiderArgs;
 
@@ -62,10 +62,10 @@ fn main() -> anyhow::Result<ExitCode> {
     // otherwise, flip the hidden status of the file
     let new_path = if is_hidden {
         info!("un-hiding file {}", file.display());
-        unhide_file(&file, args.hide_char())
+        unhide_file_path(&file, args.hide_char())
     } else {
         info!("hiding file {}", file.display());
-        hide_file(&file, args.hide_char())
+        hide_file_path(&file, args.hide_char())
     }?;
 
     // move the files
