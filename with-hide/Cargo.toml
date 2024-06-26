@@ -1,7 +1,11 @@
 [package]
 name = "with-hide"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+description = "A super simple CLI tool for running operations while hiding files"
+license = "GPLv3"
+homepage = "https://github.com/softwaresale/hider"
+repository = "https://github.com/softwaresale/hider"
 
 [dependencies]
 hide-utils-core = { path = "../hide-utils-core" }
